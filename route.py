@@ -52,34 +52,38 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
     x2,y2,z2 = xyz2
     x3,y3,z3 = xyz3
 
-    a = (x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2
-    b = 2.0 * ((x2-x1)*(x1-x3) + (y2-y1)*(y1-y3) + (z2-z1)*(z1-z3))
+    dx = x2-x1
+    dy = y2-y1
+    dz = z2-z1
+
+    a = dx**2 + dy**2 + dz**2
+    b = 2.0 * (dx*(x1-x3) + dy*(y1-y3) + dz*(z1-z3))
     c = x3**2 + y3**2 + z3**2 + x1**2 + y1**2 + z1**2 - 2.0*(x3*x1 + y3*y1 + z3*z1) - radius**2
 
-    i = b * b - 4.0 * a * c
+    i = b**2 - 4.0 * a * c
 
-    if i < 0.0:
-        # No intersection
-        return []
+    if i > 0.0:
+        # Intersection nearest xyz1
+        mu = (-b - np.sqrt(i))/(2.0 * a)
+        inter1 = (x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)
+        # The other intersection
+        mu = (-b + np.sqrt(i))/(2.0 * a)
+        inter2 = (x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)
+        return [inter1,inter2]
     elif i == 0.0:
         # Tangent intersection
-        mu = -b/2.0*a
-        return [(x1 + mu * (x2-x1), y1 + mu * (y2-y1), z1 + mu * (z2-z1))]
-    elif i > 0.0:
-        # Two intersection points
-        intersects = []
-        mu = (-b + np.sqrt(i))/2.0*a
-        intersects.append((x1 + mu * (x2-x1), y1 + mu * (y2-y1), z1 + mu * (z2-z1)))
-        mu = (-b - np.sqrt(i))/2.0*a
-        intersects.append((x1 + mu * (x2-x1), y1 + mu * (y2-y1), z1 + mu * (z2-z1)))
-        return intersects
+        mu = -b/(2.0 * a)
+        return [(x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)]
+    else:
+        # No intersection
+        return []
 
 def distance(xyz1, xyz2):
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
     return np.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
-def equal(xyz1, xyz2, tol=1e-5):
+def equal(xyz1, xyz2, tol=1e-8):
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
 
@@ -110,9 +114,9 @@ def satellite_graph(coord, earth_radius):
         for key2 in coord.keys():
             if key1 != key2:
                 intersect = line_sphere_intersect(earth_radius, coord[key1], coord[key2])
-                if key1 == 'Source' or key1 == 'Target':
-                    if len(intersect) > 0:
-                        if equal(intersect[0], coord[key1]):
+                if key2 == 'Source' or key2 == 'Target':
+                    if len(intersect) >= 0:
+                        if equal(intersect[0], coord[key2]):
                             dist = distance(coord[key1], coord[key2])
                             graph[key1][key2] = dist
                             graph[key2][key1] = dist
@@ -124,6 +128,7 @@ def satellite_graph(coord, earth_radius):
     graph = dict((k, v) for k, v in graph.items() if v)
 
     if not 'Source' in graph.keys() or not 'Target' in graph.keys():
+        print (graph)
         raise ValueError("There is no path from source to target! (maybe increase tolerance for the equal'-function)")
 
     return graph
@@ -255,4 +260,4 @@ def solve_challenge(filename='data.csv'):
     # Plot
     plot_solution(graph, coord, shortest_path)
 
-solve_challenge('data3.csv')
+solve_challenge('data2.csv')
