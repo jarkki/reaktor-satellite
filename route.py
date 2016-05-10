@@ -1,8 +1,8 @@
 import pdb
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import urllib.request
 
 def radians(degrees):
     return degrees * np.pi / 180.0
@@ -63,7 +63,7 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
     i = b**2 - 4.0 * a * c
 
     if i > 0.0:
-        # Intersection nearest xyz1
+        # The intersection nearest to point xyz1
         mu = (-b - np.sqrt(i))/(2.0 * a)
         inter1 = (x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)
         # The other intersection
@@ -84,6 +84,7 @@ def distance(xyz1, xyz2):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
 def equal(xyz1, xyz2, tol=1e-8):
+    """ Checks if two points in 3D-space have the same location, to a tolerance"""
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
 
@@ -129,7 +130,7 @@ def satellite_graph(coord, earth_radius):
 
     if not 'Source' in graph.keys() or not 'Target' in graph.keys():
         print (graph)
-        raise ValueError("There is no path from source to target! (maybe increase tolerance for the equal'-function)")
+        raise ValueError("There is no path from source to target!")
 
     return graph
 
@@ -189,21 +190,15 @@ def dijkstra(graph, source, target):
 
     return path
 
-def plot_solution(graph, coord, path):
+def plot_solution(graph, coord, path, col):
 
     # Init plotting
     plt.ion()
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.set_aspect("equal")
+    ax.set_axis_bgcolor(col['bg'])
 
-    # Plot colors
-    ax.set_axis_bgcolor('#f4f4f8')
-    sat_col = '#086788'
-    link_col = '#118ab2'
-    source_col = '#f038ff'
-    target_col = '#06d6a0'
-    opt_path_col = '#ef709d'
 
     # Plot earth
     plot_earth(ax)
@@ -212,40 +207,100 @@ def plot_solution(graph, coord, path):
     for key, val in coord.items():
         x,y,z = val
         if key is 'Source':
-            plot_point(x, y, z, ax, col=source_col, size=100)
+            plot_point(x, y, z, ax, col=col['source'], size=100)
         elif key is 'Target':
-            plot_point(x, y, z, ax, col=target_col, size=100)
+            plot_point(x, y, z, ax, col=col['target'], size=100)
         else:
-            plot_point(x, y, z, ax, col=sat_col)
+            plot_point(x, y, z, ax, col=col['sat'])
 
     # Plot the graph edges
     for key1 in graph.keys():
         for key2 in graph[key1].keys():
-            plot_line(coord[key1], coord[key2], ax, col=link_col)
+            plot_line(coord[key1], coord[key2], ax, col=col['link'])
 
     # Plot the path
     for i in range(len(path)-1):
-        plot_line(coord[path[i]], coord[path[i+1]], ax, col=opt_path_col, width=2.0)
+        plot_line(coord[path[i]], coord[path[i+1]], ax, col=col['opt_path'], width=2.0)
 
     plt.axis('off')
     plt.show()
 
-def solve_challenge(filename='data.csv'):
+def dl_data(filename='data.csv'):
+    """ Downloads the problem data and writes to csv file.
+
+    Does not handle exceptions.
+
+    """
+    response = urllib.request.urlopen('http://space-fast-track.herokuapp.com/generate')
+    data = response.read().decode('utf-8')
+    file = open(filename, 'w')
+    file.write(data)
+    file.close()
+
+def read_data(filename='data.csv'):
+    """ Read csv data from file
+
+    Does not handle exceptions.
+
+    Args:
+    -----
+    filename  --  Name of the csv file.
+
+    Returns:
+    --------
+    Dictionary with the seed(float), call locations(dict) and the satellite locations(list(dict))
+
+    """
+    # Open file and read the data
+    file = open(filename, 'r')
+    data = file.read() 
+    file.close()
+
+    # Split the rows
+    rows = data.split('\n')
+
+    # Seed
+    seed = float(rows[0].split(':')[1])
+
+    # Satellite data
+    sats = []
+    for row in rows[1:len(rows)-1]:
+        id, lat, lon, alt = row.split(',')
+        sats.append({'ID': id, 'lat': float(lat), 'lon': float(lon), 'alt': float(alt)})
+
+    # Call location data
+    _, lat1, lon1, lat2, lon2 = rows[len(rows)-1].split(',')
+    call_loc = {'lat1': float(lat1), 'lon1': float(lon1), 'lat2': float(lat2), 'lon2': float(lon2)}
+
+    res = {'sats': sats, 'seed': seed, 'call_loc': call_loc}
+    return res
+
+def solve_challenge(dl_new_data=False):
 
     earth_radius = 6371.0
 
-    # Read in data
-    sats = pd.read_csv(filename, header=None, skiprows=[0,21], names=['ID','lat','long','alt'])
-    call_coords = pd.read_csv(filename, header=None, skiprows=range(21), names=['lat1', 'long1', 'lat2', 'long2'])
+    # Plot colors
+    plot_col = {'bg'       : '#f4f4f8',
+                'sat'      : '#086788',
+                'link'     : '#118ab2',
+                'source'   : '#f038ff',
+                'target'   : '#06d6a0',
+                'opt_path' : '#ef709d'}
+
+    if dl_new_data:
+        dl_data()    # Download new dataset and save to 'data.csv'
+
+    # Read in data from file
+    data = read_data()
 
     # Transform from lat and long to Cartesian coordinates
     coord = {}
-    for i,sat in sats.iterrows():
-        coord[sat['ID']] = latlon_to_cartesian(earth_radius + sat['alt'], sat['lat'], sat['long'])
+    for sat in data['sats']:
+        coord[sat['ID']] = latlon_to_cartesian(earth_radius + sat['alt'], sat['lat'], sat['lon'])
 
     # Add call locations
-    coord['Source'] = latlon_to_cartesian(earth_radius, call_coords['lat1'].values[0], call_coords['long1'].values[0])
-    coord['Target'] = latlon_to_cartesian(earth_radius, call_coords['lat2'].values[0], call_coords['long2'].values[0])
+    coord['Source'] = latlon_to_cartesian(earth_radius, data['call_loc']['lat1'], data['call_loc']['lon1'])
+    coord['Target'] = latlon_to_cartesian(earth_radius, data['call_loc']['lat2'], data['call_loc']['lon2'])
 
     # Create the graph (connections between satellites and locations that have clear view to each other) with distances as edges
     graph = satellite_graph(coord, earth_radius)
@@ -255,9 +310,9 @@ def solve_challenge(filename='data.csv'):
 
     # Print the path
     path_str = "{}".format(shortest_path[1:len(shortest_path)-1]).replace("'","")
-    print("Shortest path: {}".format(path_str))
+    print("Shortest path: {}, seed: {}".format(path_str, data['seed']))
 
     # Plot
-    plot_solution(graph, coord, shortest_path)
+    plot_solution(graph, coord, shortest_path, plot_col)
 
-solve_challenge('data2.csv')
+solve_challenge(dl_new_data=False)
