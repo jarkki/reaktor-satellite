@@ -25,17 +25,15 @@ def plot_earth(ax, radius = 6371.0):
     return ax.plot_surface(x, y, z, alpha=0.05, color='#fff1d0', rstride=1, cstride=1, linewidth=1, shade=1)
 
 def plot_point(x,y,z, ax, col='#086788', size=50):
-    return ax.scatter([x],[y],[z],c=col,s=size,edgecolor='none')
+    return ax.scatter([x], [y], [z], c=col, s=size, edgecolor='none')
 
 def plot_line(xyz1, xyz2, ax, col='r', width=1.0):
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
-    return ax.plot([x1,x2],[y1,y2],[z1,z2],c=col, linewidth=width)
+    return ax.plot([x1,x2], [y1,y2], [z1,z2], c=col, linewidth=width)
 
 def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
     """ Calculates whether a line and a sphere intersect
-
-    Assumes the sphere is centered at origin.
 
     Args:
     -----
@@ -79,12 +77,13 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
         return []
 
 def distance(xyz1, xyz2):
+    """ Distance between two points"""
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
     return np.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
 def equal(xyz1, xyz2, tol=1e-8):
-    """ Checks if two points in 3D-space have the same location, to a tolerance"""
+    """ Checks if two points in 3D-space have the same location, with a tolerance"""
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
 
@@ -151,11 +150,11 @@ def dijkstra(graph, source, target):
     -----
     graph       --  A dict of dicts representation of the graph with weights (distances).
     source      --  Name of the starting node
-    destination --  Name of the destination node
+    target --  Name of the destination node
 
     Returns:
     --------
-    A list with node names ordered to give the shortest path from source to destination
+    A list with node names ordered to give the shortest path from source to target
     """
     dist = dict() # Distance from source to vertex v
     prev = dict() # Previous node in the optimal path from source
@@ -170,7 +169,7 @@ def dijkstra(graph, source, target):
 
     while len(Q) > 0:
         u = min_dist_vertex(Q,dist)
-        if u == target or dist[u] == float('Inf'):
+        if u == target:
             break
         Q.remove(u)
 
