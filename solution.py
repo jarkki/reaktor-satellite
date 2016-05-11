@@ -6,8 +6,8 @@ See README.md for further info.
 
 Copyright (C) 2016  Jarno Kiviaho <jarkki@kapsi.fi>
 """
-
 import sys
+
 import numpy as np
 
 
