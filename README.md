@@ -1,19 +1,19 @@
 # Reaktor Orbital Challenge solution
 ![](plot.png?raw=true)
 
-This Python script solves the [Reaktor Orbital Challenge](https://reaktor.com/orbital-challenge/) by using the [Dijkstra shortest path algorithm](https://en.wikipedia.org/wiki/Dijkstra's_algorithm) to find the shortest path from caller to recipient through the given satellite configuration.
+This Python script solves the [Reaktor Orbital Challenge](https://reaktor.com/orbital-challenge/) by using [Dijkstra's shortest path algorithm](https://en.wikipedia.org/wiki/Dijkstra's_algorithm) to find the shortest path from caller to recipient through the given satellite configuration.
 
 ## Dependencies
 * Python version >= 2.7
 
 Optional:
 
-* Matplotlib for plotting
+* [Matplotlib](http://matplotlib.org/) for plotting
     
 ## Run
 Execute
 ```bash
-    python route.py
+python route.py
 ```
 from command line.
 

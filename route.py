@@ -2,10 +2,10 @@
 #  Solution to the Reaktor Orbital Challenge
 #    https://reaktor.com/orbital-challenge/
 #
+#  See README.md for further info.
+#
 #  Copyright (C) 2016  Jarno Kiviaho <jarkki@kapsi.fi>
 #
-#
-import pdb
 import sys
 import numpy as np
 
@@ -279,11 +279,10 @@ def plot_solution(graph, coord, path, col=None):
     plt.axis('off')
     plt.show()
 
-def dl_data(url='http://space-fast-track.herokuapp.com/generate',
-            filename='data.csv'):
-    """ Downloads the problem data and writes to csv file.
+def dl_data(url='http://space-fast-track.herokuapp.com/generate', filename='data.csv'):
+    """ Downloads the problem data and writes it to a csv file.
 
-    Does not handle exceptions.
+    Note: Does not handle exceptions.
 
     Args:
     -----
@@ -309,7 +308,7 @@ def dl_data(url='http://space-fast-track.herokuapp.com/generate',
 def read_data(filename='data.csv'):
     """ Read csv data from file
 
-    Does not handle exceptions.
+    Note: Does not handle exceptions.
 
     Args:
     -----
@@ -344,7 +343,7 @@ def read_data(filename='data.csv'):
     res = {'sats': sats, 'seed': seed, 'call_loc': call_loc}
     return res
 
-def solve_challenge(dl_new_data=False):
+def solve_challenge(plot=True, dl_new_data=False):
 
     earth_radius = 6371.0
 
@@ -374,6 +373,7 @@ def solve_challenge(dl_new_data=False):
     print("Shortest path: {}, seed: {}".format(path_str, data['seed']))
 
     # Plot
-    plot_solution(graph, coord, shortest_path)
+    if plot:
+        plot_solution(graph, coord, shortest_path)
 
-solve_challenge(dl_new_data=False)
+solve_challenge(plot=True, dl_new_data=False)
