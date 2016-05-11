@@ -44,7 +44,8 @@ def plot_earth(ax, radius=6371.0, col='#fff1d0'):
     x, y, z = spherical_to_cartesian(radius, theta, phi)
 
     # Plot
-    return ax.plot_surface(x, y, z, alpha=0.05, color=col, rstride=1, cstride=1, linewidth=1, shade=1)
+    return ax.plot_surface(x, y, z, alpha=0.05, color=col,
+                           rstride=1, cstride=1, linewidth=1, shade=1)
 
 
 def plot_point(x,y,z, ax, col='#086788', size=50):
@@ -63,9 +64,9 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
     Args:
     -----
     radius --  The radius of the sphere (centered at xyz3)
-    xyz1   --  Tuple of cartesian coordinates for the first point: (x1,y1,z1)
-    xyz2   --  Tuple of cartesian coordinates for the second point: (x2,y2,z2)
-    xyz3   --  Tuple of cartesian coordinates for center of the sphere: (x3,y3,z3)
+    xyz1   --  Tuple of Cartesian coordinates for the first point: (x1,y1,z1)
+    xyz2   --  Tuple of Cartesian coordinates for the second point: (x2,y2,z2)
+    xyz3   --  Tuple of Cartesian coordinates for center of the sphere: (x3,y3,z3)
 
     Returns:
     --------
@@ -81,7 +82,8 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
 
     a = dx**2 + dy**2 + dz**2
     b = 2.0 * (dx*(x1-x3) + dy*(y1-y3) + dz*(z1-z3))
-    c = x3**2 + y3**2 + z3**2 + x1**2 + y1**2 + z1**2 - 2.0*(x3*x1 + y3*y1 + z3*z1) - radius**2
+    c = x3**2 + y3**2 + z3**2 + x1**2 + y1**2 + z1**2 \
+        - 2.0*(x3*x1 + y3*y1 + z3*z1) - radius**2
 
     i = b**2 - 4.0 * a * c
 
@@ -110,7 +112,7 @@ def distance(xyz1, xyz2):
 
 
 def equal(xyz1, xyz2, tol=1e-8):
-    """Checks if two points in 3D-space have the same location, within tolerance."""
+    """Checks if two points in 3D-space have the same location, within a tolerance."""
     if distance (xyz1, xyz2) < tol:
         return True
     else:
@@ -120,21 +122,25 @@ def equal(xyz1, xyz2, tol=1e-8):
 def satellite_graph(coord, earth_radius):
     """Create graph for satellites and call locations.
 
-    Two satellites are connected if there is an un-obstructed view from one to another. Same goes between satellites and call locations. Edge weights are the distances. Call locations are included in the graph.
+    Two satellites are connected if there is an un-obstructed view
+    from one to another. Same goes between satellites and call locations.
+    Edge weights are the distances. Call locations are included in the graph.
 
-    Note: The resulting graph can include satellites that are connected to other satellites, but can not reach the call locations. This poses no problem for the solution since the Dijkstra's algorithm can handle it.
+    Note: The resulting graph can include satellites that are connected
+    to other satellites, but can not reach the call locations. This poses
+    no problem for the solution since the Dijkstra's algorithm can handle it.
 
     Args:
     -----
-    coord        -- A dict of satellite coordinates (Cartesian) including call locations with names 'Source and 'Target'.
+    coord        -- A dict of satellite coordinates (Cartesian),
+                    including call locations with names 'Source and 'Target'.
     earth_radius -- The radius of earth.
 
     Returns:
     --------
-    A dict of dicts graph representation of the connections between satellites (and call locations) with distances.
-
+    A dict of dicts graph representation of the connections between satellites
+    (and call locations) with distances.
     """
-    nsats = len(coord)-2
     graph = {}
 
     for key in coord.keys():
@@ -143,7 +149,8 @@ def satellite_graph(coord, earth_radius):
     for key1 in coord.keys():
         for key2 in coord.keys():
             if key1 not in ['Source', 'Target', key2]:
-                # Check if the line created by the two points (satellites/call locations) intersects the planet sphere
+                # Check if the line created by the two points (satellites/call locations)
+                # intersects the planet sphere
                 intersect = line_sphere_intersect(earth_radius, coord[key1], coord[key2])
                 # Satellite to call location
                 if key2 == 'Source' or key2 == 'Target':
@@ -174,17 +181,16 @@ def satellite_graph(coord, earth_radius):
 
 
 def min_dist_vertex(Q, dist):
-    """Search for the vertex with the minimum distance from source, in vertices given in Q.
+    """Search for the vertex with the minimum distance from source.
 
     Args:
     -----
-    Q     --  List of vertice names.
-    dist  --  Dict, representing the distance from source to vertex v.
+    Q     --  List of vertice names for the search.
+    dist  --  Dict, representing the distance from source to each vertex.
 
     Returns:
     --------
     The name of the vertex with the minimum distance from source.
-
     """
     min_vertex = Q[0]
 
@@ -196,20 +202,25 @@ def min_dist_vertex(Q, dist):
 
 
 def dijkstra(graph, source, target):
-    """The Dijkstra algorithm for finding the shortest path between two vertices in an undirected weighted graph.
+    """The Dijkstra algorithm.
+
+    Finds the shortest path between two vertices in an
+    undirected weighted graph.
 
     Args:
     -----
-    graph    --  A dict of dicts representation of the graph with weights (distances).
+    graph    --  A dict of dicts representation of the graph
+                 with weights (distances).
     source   --  Name of the starting vertex
     target   --  Name of the destination vertex
 
     Returns:
     --------
-    An ordered list with node names to give the shortest path from source to target
+    An ordered list with node names to give the shortest path
+    from source to target.
     """
-    dist = dict() # Distance from source to vertex v
-    prev = dict() # Previous node in the optimal path from source
+    dist = dict()  # Distance from source to vertex v
+    prev = dict()  # Previous node in the optimal path from source
 
     vertices = list(graph.keys())
     for vertex in vertices:
@@ -252,11 +263,11 @@ def plot_solution(graph, coord, path, col=None):
     graph  --  Dict of dicts graph representation
     coord  --  Coordinates for each satellite and call location
     path   --  The shortest path from call source to target
-    col    --  Dict of colors for plotting, with keys ['bg', 'sat', 'link', 'source', 'target', 'opt_path']
+    col    --  Dict of colors for plotting, with keys:
+               ['bg', 'sat', 'link', 'source', 'target', 'opt_path']
     """
     # Check if matplotlib is installed
     try:
-        import matplotlib
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
     except ImportError as e:
@@ -298,13 +309,14 @@ def plot_solution(graph, coord, path, col=None):
 
     # Plot the path
     for i in range(len(path)-1):
-        plot_line(coord[path[i]], coord[path[i+1]], ax, col=col['opt_path'], width=2.0)
+        plot_line(coord[path[i]], coord[path[i+1]], ax,
+                  col=col['opt_path'], width=2.0)
 
     plt.axis('off')
     plt.show()
 
 
-def dl_data(url='http://space-fast-track.herokuapp.com/generate', filename='data.csv'):
+def dl_data(url=None, filename='data.csv'):
     """Download the problem data and write it to a csv file.
 
     Note: Does not handle exceptions.
@@ -315,6 +327,9 @@ def dl_data(url='http://space-fast-track.herokuapp.com/generate', filename='data
     filename  --  Name of the csv file to write to.
 
     """
+    if url is None:
+        url = 'http://space-fast-track.herokuapp.com/generate'
+
     # Handle different urllib implementation for python 2 and 3
     py3 = sys.version_info[0] == 3
     if py3:
@@ -342,8 +357,8 @@ def read_data(filename='data.csv'):
 
     Returns:
     --------
-    Dictionary with the seed(float), call locations(dict) and the satellite locations(list(dict))
-
+    Dictionary with the seed(float), call locations(dict) and the
+    satellite locations(list(dict))
     """
     # Open file and read the data
     file = open(filename, 'r')
@@ -360,11 +375,13 @@ def read_data(filename='data.csv'):
     sats = []
     for row in rows[1:len(rows)-1]:
         id, lat, lon, alt = row.split(',')
-        sats.append({'ID': id, 'lat': float(lat), 'lon': float(lon), 'alt': float(alt)})
+        sats.append({'ID': id, 'lat': float(lat),
+                     'lon': float(lon), 'alt': float(alt)})
 
     # Call location data
     _, lat1, lon1, lat2, lon2 = rows[len(rows)-1].split(',')
-    call_loc = {'lat1': float(lat1), 'lon1': float(lon1), 'lat2': float(lat2), 'lon2': float(lon2)}
+    call_loc = {'lat1': float(lat1), 'lon1': float(lon1),
+                'lat2': float(lat2), 'lon2': float(lon2)}
 
     res = {'sats': sats, 'seed': seed, 'call_loc': call_loc}
     return res
@@ -378,7 +395,8 @@ def solve_challenge(plot=True, dl_new_data=False):
     Args:
     -----
     plot        --  Boolean for plotting with Matplotlib
-    dl_new_data --  Boolean for downloading a new dataset from the challenge web page. If false, the local data.csv file is used.
+    dl_new_data --  Boolean for downloading a new dataset from the challenge web page.
+                    If false, the local data.csv file is used.
     """
     earth_radius = 6371.0
 
@@ -392,13 +410,19 @@ def solve_challenge(plot=True, dl_new_data=False):
     # Transform from lat and long to Cartesian coordinates
     coord = {}
     for sat in data['sats']:
-        coord[sat['ID']] = latlon_to_cartesian(earth_radius + sat['alt'], sat['lat'], sat['lon'])
+        coord[sat['ID']] = latlon_to_cartesian(earth_radius + sat['alt'],
+                                               sat['lat'], sat['lon'])
 
     # Add source and target call locations
-    coord['Source'] = latlon_to_cartesian(earth_radius, data['call_loc']['lat1'], data['call_loc']['lon1'])
-    coord['Target'] = latlon_to_cartesian(earth_radius, data['call_loc']['lat2'], data['call_loc']['lon2'])
+    coord['Source'] = latlon_to_cartesian(earth_radius,
+                                          data['call_loc']['lat1'],
+                                          data['call_loc']['lon1'])
+    coord['Target'] = latlon_to_cartesian(earth_radius,
+                                          data['call_loc']['lat2'],
+                                          data['call_loc']['lon2'])
 
-    # Create the graph (connections between satellites (and locations) that have clear view to each other) with distances as edges
+    # Create the graph (connections between satellites (and locations)
+    # that have clear view to each other) with distances as edges
     graph = satellite_graph(coord, earth_radius)
 
     # Calculate the shortest path from source to target
