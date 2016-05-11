@@ -6,26 +6,30 @@ See README.md for further info.
 
 Copyright (C) 2016  Jarno Kiviaho <jarkki@kapsi.fi>
 """
+
 import sys
 import numpy as np
 
 
 def radians(degrees):
+    """Convert degrees to radians."""
     return degrees * np.pi / 180.0
 
 
 def spherical_to_cartesian(radius, theta, phi):
+    """Convert spherical coordinates to Cartesian coordinates."""
     x = radius * np.cos(theta) * np.sin(phi)
     y = radius * np.sin(theta) * np.sin(phi)
     z = radius * np.cos(phi)
-    return (x,y,z)
+    return (x, y, z)
 
 
 def latlon_to_cartesian(radius, lat, lon):
+    """Convert GPS coordinates to Cartesian coordinates."""
     x = radius * np.cos(radians(lat)) * np.cos(radians(lon))
     y = radius * np.cos(radians(lat)) * np.sin(radians(lon))
     z = radius * np.sin(radians(lat))
-    return (x,y,z)
+    return (x, y, z)
 
 
 def plot_earth(ax, radius=6371.0, col='#fff1d0'):
@@ -49,32 +53,34 @@ def plot_earth(ax, radius=6371.0, col='#fff1d0'):
 
 
 def plot_point(x,y,z, ax, col='#086788', size=50):
+    """Plot point (x,y,z) on the given pyplot ax."""
     return ax.scatter([x], [y], [z], c=col, s=size, edgecolor='none')
 
 
 def plot_line(xyz1, xyz2, ax, col='r', width=1.0):
+    """Plot line between two points on the given pyplot ax."""
     x1, y1, z1 = xyz1
     x2, y2, z2 = xyz2
     return ax.plot([x1, x2], [y1, y2], [z1, z2], c=col, linewidth=width)
 
 
-def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
-    """Calculates whether a line and a sphere intersect.
+def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0, 0.0, 0.0)):
+    """Calculate whether a line and a sphere intersect.
 
     Args:
     -----
     radius --  The radius of the sphere (centered at xyz3)
-    xyz1   --  Tuple of Cartesian coordinates for the first point: (x1,y1,z1)
-    xyz2   --  Tuple of Cartesian coordinates for the second point: (x2,y2,z2)
-    xyz3   --  Tuple of Cartesian coordinates for center of the sphere: (x3,y3,z3)
+    xyz1   --  Cartesian coordinates for the first point: (x1,y1,z1)
+    xyz2   --  Cartesian coordinates for the second point: (x2,y2,z2)
+    xyz3   --  Cartesian coordinates for center of the sphere: (x3,y3,z3)
 
     Returns:
     --------
     List with the intersection coordinates or empty list if no intersection
     """
-    x1,y1,z1 = xyz1
-    x2,y2,z2 = xyz2
-    x3,y3,z3 = xyz3
+    x1, y1, z1 = xyz1
+    x2, y2, z2 = xyz2
+    x3, y3, z3 = xyz3
 
     dx = x2-x1
     dy = y2-y1
@@ -96,7 +102,7 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
         # The other intersection
         mu = (-b + np.sqrt(i))/(2.0 * a)
         inter2 = (x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)
-        return [inter1,inter2]
+        return [inter1, inter2]
 
     elif i == 0.0:
 
@@ -111,14 +117,14 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
 
 def distance(xyz1, xyz2):
     """Distance between two points in 3D-space."""
-    x1,y1,z1 = xyz1
-    x2,y2,z2 = xyz2
+    x1, y1, z1 = xyz1
+    x2, y2, z2 = xyz2
     return np.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
 
 def equal(xyz1, xyz2, tol=1e-8):
-    """Checks if two points in 3D-space have the same location, within a tolerance."""
-    if distance (xyz1, xyz2) < tol:
+    """Check if two points in 3D-space are the same within a tolerance."""
+    if distance(xyz1, xyz2) < tol:
         return True
     else:
         return False
@@ -155,15 +161,17 @@ def satellite_graph(coord, earth_radius):
     for key1 in coord.keys():
         for key2 in coord.keys():
             if key1 not in ['Source', 'Target', key2]:
-                # Check if the line created by the two points (satellites/call locations)
-                # intersects the planet sphere
-                intersect = line_sphere_intersect(earth_radius, coord[key1], coord[key2])
+                # Check if the line created by the two points
+                # (satellites/call locations) intersects the planet sphere
+                intersect = line_sphere_intersect(earth_radius, coord[key1],
+                                                  coord[key2])
                 # Satellite to call location
                 if key2 == 'Source' or key2 == 'Target':
                     if len(intersect) >= 0:
                         # Two intersections or one tangent.
-                        # Check if the intersection closest to key1 is the call location
-                        # If so, the satellite has un-obstructed view to the call location.
+                        # Check if the intersection closest to key1 is the
+                        # call location. If so, the satellite has un-obstructed
+                        # view to the call location.
                         if equal(intersect[0], coord[key2]):
                             # Un-obstructed view
                             dist = distance(coord[key1], coord[key2])
@@ -172,7 +180,8 @@ def satellite_graph(coord, earth_radius):
                 else:
                     # Satellite to satellite
                     if len(intersect) == 0:
-                        # No intersection, two satellites have un-obstructed view
+                        # No intersection, two satellites have un-obstructed
+                        # view
                         graph[key1][key2] = distance(coord[key1], coord[key2])
 
     # Remove nodes with no connections
@@ -396,13 +405,13 @@ def read_data(filename='data.csv'):
 def solve_challenge(plot=True, dl_new_data=False):
     """The main function.
 
-    Uses Dijkstra's algorithm to solve the Reaktor Orbital Challenge problem.
+    Use Dijkstra's algorithm to solve the Reaktor Orbital Challenge problem.
 
     Args:
     -----
     plot        --  Boolean for plotting with Matplotlib
-    dl_new_data --  Boolean for downloading a new dataset from the challenge web page.
-                    If false, the local data.csv file is used.
+    dl_new_data --  Boolean for downloading a new dataset from the challenge
+                    web page. If false, the local data.csv file is used.
     """
     earth_radius = 6371.0
 
@@ -434,7 +443,7 @@ def solve_challenge(plot=True, dl_new_data=False):
     # Calculate the shortest path from source to target
     shortest_path = dijkstra(graph, 'Source', 'Target')
 
-    # Print the path and seed
+    # Print the path and the seed
     path_str = "{}".format(shortest_path[1:len(shortest_path)-1]).replace("'","")
     print("Shortest path: {}, seed: {}".format(path_str, data['seed']))
 
