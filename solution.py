@@ -88,18 +88,23 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
     i = b**2 - 4.0 * a * c
 
     if i > 0.0:
+
         # The intersection nearest to point xyz1
         mu = (-b - np.sqrt(i))/(2.0 * a)
         inter1 = (x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)
+
         # The other intersection
         mu = (-b + np.sqrt(i))/(2.0 * a)
         inter2 = (x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)
         return [inter1,inter2]
+
     elif i == 0.0:
+
         # Tangent intersection
         mu = -b/(2.0 * a)
         return [(x1 + mu * dx, y1 + mu * dy, z1 + mu * dz)]
     else:
+
         # No intersection
         return []
 
@@ -126,9 +131,10 @@ def satellite_graph(coord, earth_radius):
     from one to another. Same goes between satellites and call locations.
     Edge weights are the distances. Call locations are included in the graph.
 
-    Note: The resulting graph can include satellites that are connected
-    to other satellites, but can not reach the call locations. This poses
-    no problem for the solution since the Dijkstra's algorithm can handle it.
+    Note: The resulting graph is not necessarily connected. It can include
+    satellites that are connected to other satellites, but can not reach
+    the call locations. This poses  no problem for the solution since the
+    Dijkstra's algorithm can handle it.
 
     Args:
     -----
