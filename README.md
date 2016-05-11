@@ -14,7 +14,7 @@ Optional:
 ## Run
 Execute
 ```bash
-python route.py
+python solution.py
 ```
 from command line.
 
