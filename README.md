@@ -5,6 +5,7 @@ This Python script solves the [Reaktor Orbital Challenge](https://reaktor.com/or
 
 ## Dependencies
 * Python version >= 2.7
+* [Numpy](http://www.numpy.org/)
 
 Optional:
 

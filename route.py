@@ -344,11 +344,21 @@ def read_data(filename='data.csv'):
     return res
 
 def solve_challenge(plot=True, dl_new_data=False):
+    """ The main function
+
+    Uses Dijkstra's algorithm to solve the Reaktor Orbital Challenge problem.
+
+    Args:
+    -----
+    plot        --  Boolean for plotting with Matplotlib
+    dl_new_data --  Boolean for downloading a new dataset from the challenge web page. If false, the local data.csv file is used.
+    """
 
     earth_radius = 6371.0
 
     if dl_new_data:
-        dl_data()    # Download new dataset and save to 'data.csv'
+        # Download new dataset and save to 'data.csv'
+        dl_data()
 
     # Read in data from 'data.csv'
     data = read_data()
