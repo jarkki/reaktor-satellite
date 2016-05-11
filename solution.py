@@ -37,10 +37,10 @@ def plot_earth(ax, radius=6371.0, col='#fff1d0'):
     radius -- Radius of Earth
     col    -- The color for Earth
     """
-    # Create spherical coordinates
+    # Create coordinates for sphere
     theta, phi = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
 
-    # Transform to Cartesian
+    # Transform to Cartesian coordinates
     x, y, z = spherical_to_cartesian(radius, theta, phi)
 
     # Plot
@@ -62,7 +62,7 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
 
     Args:
     -----
-    radius --  The radius of the sphere (centered at origo)
+    radius --  The radius of the sphere (centered at xyz3)
     xyz1   --  Tuple of cartesian coordinates for the first point: (x1,y1,z1)
     xyz2   --  Tuple of cartesian coordinates for the second point: (x2,y2,z2)
     xyz3   --  Tuple of cartesian coordinates for center of the sphere: (x3,y3,z3)
