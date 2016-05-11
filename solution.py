@@ -1,16 +1,18 @@
-#
-#  Solution to the Reaktor Orbital Challenge
-#    https://reaktor.com/orbital-challenge/
-#
-#  See README.md for further info.
-#
-#  Copyright (C) 2016  Jarno Kiviaho <jarkki@kapsi.fi>
-#
+"""Solution to the Reaktor Orbital Challenge.
+
+https://reaktor.com/orbital-challenge/
+
+See README.md for further info.
+
+Copyright (C) 2016  Jarno Kiviaho <jarkki@kapsi.fi>
+"""
 import sys
 import numpy as np
 
+
 def radians(degrees):
     return degrees * np.pi / 180.0
+
 
 def spherical_to_cartesian(radius, theta, phi):
     x = radius * np.cos(theta) * np.sin(phi)
@@ -18,28 +20,45 @@ def spherical_to_cartesian(radius, theta, phi):
     z = radius * np.cos(phi)
     return (x,y,z)
 
+
 def latlon_to_cartesian(radius, lat, lon):
     x = radius * np.cos(radians(lat)) * np.cos(radians(lon))
     y = radius * np.cos(radians(lat)) * np.sin(radians(lon))
     z = radius * np.sin(radians(lat))
     return (x,y,z)
 
-def plot_earth(ax, radius = 6371.0, col='#fff1d0'):
-    """ Plot earth as a perfect sphere """
+
+def plot_earth(ax, radius=6371.0, col='#fff1d0'):
+    """Plot earth as a perfect sphere.
+
+    Args:
+    -----
+    ax     -- Pyplot ax to use for plotting
+    radius -- Radius of Earth
+    col    -- The color for Earth
+    """
+    # Create spherical coordinates
     theta, phi = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
-    x,y,z = spherical_to_cartesian(radius, theta, phi)
+
+    # Transform to Cartesian
+    x, y, z = spherical_to_cartesian(radius, theta, phi)
+
+    # Plot
     return ax.plot_surface(x, y, z, alpha=0.05, color=col, rstride=1, cstride=1, linewidth=1, shade=1)
+
 
 def plot_point(x,y,z, ax, col='#086788', size=50):
     return ax.scatter([x], [y], [z], c=col, s=size, edgecolor='none')
 
+
 def plot_line(xyz1, xyz2, ax, col='r', width=1.0):
-    x1,y1,z1 = xyz1
-    x2,y2,z2 = xyz2
-    return ax.plot([x1,x2], [y1,y2], [z1,z2], c=col, linewidth=width)
+    x1, y1, z1 = xyz1
+    x2, y2, z2 = xyz2
+    return ax.plot([x1, x2], [y1, y2], [z1, z2], c=col, linewidth=width)
+
 
 def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
-    """ Calculates whether a line and a sphere intersect
+    """Calculates whether a line and a sphere intersect.
 
     Args:
     -----
@@ -82,21 +101,24 @@ def line_sphere_intersect(radius, xyz1, xyz2, xyz3=(0.0,0.0,0.0)):
         # No intersection
         return []
 
+
 def distance(xyz1, xyz2):
-    """ Distance between two points in 3D-space"""
+    """Distance between two points in 3D-space."""
     x1,y1,z1 = xyz1
     x2,y2,z2 = xyz2
     return np.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
+
 def equal(xyz1, xyz2, tol=1e-8):
-    """ Checks if two points in 3D-space have the same location, within tolerance."""
+    """Checks if two points in 3D-space have the same location, within tolerance."""
     if distance (xyz1, xyz2) < tol:
         return True
     else:
         return False
 
+
 def satellite_graph(coord, earth_radius):
-    """ Create graph for satellites and call locations.
+    """Create graph for satellites and call locations.
 
     Two satellites are connected if there is an un-obstructed view from one to another. Same goes between satellites and call locations. Edge weights are the distances. Call locations are included in the graph.
 
@@ -143,15 +165,16 @@ def satellite_graph(coord, earth_radius):
     # Remove nodes with no connections
     graph = dict((k, v) for k, v in graph.items() if v)
 
-    if not 'Source' in graph.keys():
+    if 'Source' not in graph.keys():
         raise ValueError("Source can not be connected to any satellite!")
-    elif not 'Target' in graph.keys():
+    elif 'Target' not in graph.keys():
         raise ValueError("Target can not be connected to any satellite!")
 
     return graph
 
+
 def min_dist_vertex(Q, dist):
-    """ Search for the vertex with the minimum distance from source, in vertices given in Q.
+    """Search for the vertex with the minimum distance from source, in vertices given in Q.
 
     Args:
     -----
@@ -171,8 +194,9 @@ def min_dist_vertex(Q, dist):
 
     return min_vertex
 
+
 def dijkstra(graph, source, target):
-    """ The Dijkstra algorithm for finding the shortest path between two vertices in an undirected weighted graph.
+    """The Dijkstra algorithm for finding the shortest path between two vertices in an undirected weighted graph.
 
     Args:
     -----
@@ -217,8 +241,9 @@ def dijkstra(graph, source, target):
 
     return path
 
+
 def plot_solution(graph, coord, path, col=None):
-    """ Use matplotlib to plot the solution
+    """Use matplotlib to plot the solution.
 
     Note: the plot blocks the script execution until the it is closed.
 
@@ -229,7 +254,6 @@ def plot_solution(graph, coord, path, col=None):
     path   --  The shortest path from call source to target
     col    --  Dict of colors for plotting, with keys ['bg', 'sat', 'link', 'source', 'target', 'opt_path']
     """
-
     # Check if matplotlib is installed
     try:
         import matplotlib
@@ -242,16 +266,16 @@ def plot_solution(graph, coord, path, col=None):
 
     # Init plotting
     if col is None:
-        col = {'bg'       : '#f4f4f8',
-               'sat'      : '#086788',
-               'link'     : '#118ab2',
-               'source'   : '#f038ff',
-               'target'   : '#06d6a0',
-               'opt_path' : '#ef709d'}
+        col = {'bg':       '#f4f4f8',
+               'sat':      '#086788',
+               'link':     '#118ab2',
+               'source':   '#f038ff',
+               'target':   '#06d6a0',
+               'opt_path': '#ef709d'}
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.set_aspect("equal")
+    ax.set_aspect('equal')
     ax.set_axis_bgcolor(col['bg'])
 
     # Plot earth
@@ -279,8 +303,9 @@ def plot_solution(graph, coord, path, col=None):
     plt.axis('off')
     plt.show()
 
+
 def dl_data(url='http://space-fast-track.herokuapp.com/generate', filename='data.csv'):
-    """ Downloads the problem data and writes it to a csv file.
+    """Download the problem data and write it to a csv file.
 
     Note: Does not handle exceptions.
 
@@ -305,8 +330,9 @@ def dl_data(url='http://space-fast-track.herokuapp.com/generate', filename='data
     file.write(data)
     file.close()
 
+
 def read_data(filename='data.csv'):
-    """ Read csv data from file
+    """Read csv data from file.
 
     Note: Does not handle exceptions.
 
@@ -343,8 +369,9 @@ def read_data(filename='data.csv'):
     res = {'sats': sats, 'seed': seed, 'call_loc': call_loc}
     return res
 
+
 def solve_challenge(plot=True, dl_new_data=False):
-    """ The main function
+    """The main function.
 
     Uses Dijkstra's algorithm to solve the Reaktor Orbital Challenge problem.
 
@@ -353,7 +380,6 @@ def solve_challenge(plot=True, dl_new_data=False):
     plot        --  Boolean for plotting with Matplotlib
     dl_new_data --  Boolean for downloading a new dataset from the challenge web page. If false, the local data.csv file is used.
     """
-
     earth_radius = 6371.0
 
     if dl_new_data:
