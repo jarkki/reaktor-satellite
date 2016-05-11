@@ -5,6 +5,7 @@
 #  Copyright (C) 2016  Jarno Kiviaho <jarkki@kapsi.fi>
 #
 #
+import pdb
 import sys
 import numpy as np
 
@@ -97,7 +98,9 @@ def equal(xyz1, xyz2, tol=1e-8):
 def satellite_graph(coord, earth_radius):
     """ Create graph for satellites and call locations.
 
-    Two satellites are connected if there is an un-obstructed view from one to another. Edge weights are the distances between satellites. Call locations are included in the graph.
+    Two satellites are connected if there is an un-obstructed view from one to another. Same goes between satellites and call locations. Edge weights are the distances. Call locations are included in the graph.
+
+    Note: The resulting graph can include satellites that are connected to other satellites, but can not reach the call locations. This poses no problem for the solution since the Dijkstra's algorithm can handle it.
 
     Args:
     -----
@@ -120,6 +123,7 @@ def satellite_graph(coord, earth_radius):
             if key1 not in ['Source', 'Target', key2]:
                 # Check if the line created by the two points (satellites/call locations) intersects the planet sphere
                 intersect = line_sphere_intersect(earth_radius, coord[key1], coord[key2])
+                # Satellite to call location
                 if key2 == 'Source' or key2 == 'Target':
                     if len(intersect) >= 0:
                         # Two intersections or one tangent.
@@ -131,6 +135,7 @@ def satellite_graph(coord, earth_radius):
                             graph[key1][key2] = dist
                             graph[key2][key1] = dist
                 else:
+                    # Satellite to satellite
                     if len(intersect) == 0:
                         # No intersection, two satellites have un-obstructed view
                         graph[key1][key2] = distance(coord[key1], coord[key2])
@@ -138,8 +143,10 @@ def satellite_graph(coord, earth_radius):
     # Remove nodes with no connections
     graph = dict((k, v) for k, v in graph.items() if v)
 
-    if not 'Source' in graph.keys() or not 'Target' in graph.keys():
-        raise ValueError("There is no path from source to target!")
+    if not 'Source' in graph.keys():
+        raise ValueError("Source can not be connected to any satellite!")
+    elif not 'Target' in graph.keys():
+        raise ValueError("Target can not be connected to any satellite!")
 
     return graph
 
@@ -210,7 +217,7 @@ def dijkstra(graph, source, target):
 
     return path
 
-def plot_solution(graph, coord, path, col):
+def plot_solution(graph, coord, path, col=None):
     """ Use matplotlib to plot the solution
 
     Note: the plot blocks the script execution until the it is closed.
@@ -220,7 +227,7 @@ def plot_solution(graph, coord, path, col):
     graph  --  Dict of dicts graph representation
     coord  --  Coordinates for each satellite and call location
     path   --  The shortest path from call source to target
-    col    --  Dict of colors for plotting
+    col    --  Dict of colors for plotting, with keys ['bg', 'sat', 'link', 'source', 'target', 'opt_path']
     """
 
     # Check if matplotlib is installed
@@ -234,6 +241,14 @@ def plot_solution(graph, coord, path, col):
         return
 
     # Init plotting
+    if col is None:
+        col = {'bg'       : '#f4f4f8',
+               'sat'      : '#086788',
+               'link'     : '#118ab2',
+               'source'   : '#f038ff',
+               'target'   : '#06d6a0',
+               'opt_path' : '#ef709d'}
+
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.set_aspect("equal")
@@ -333,14 +348,6 @@ def solve_challenge(dl_new_data=False):
 
     earth_radius = 6371.0
 
-    # Plot colors
-    plot_col = {'bg'       : '#f4f4f8',
-                'sat'      : '#086788',
-                'link'     : '#118ab2',
-                'source'   : '#f038ff',
-                'target'   : '#06d6a0',
-                'opt_path' : '#ef709d'}
-
     if dl_new_data:
         dl_data()    # Download new dataset and save to 'data.csv'
 
@@ -367,6 +374,6 @@ def solve_challenge(dl_new_data=False):
     print("Shortest path: {}, seed: {}".format(path_str, data['seed']))
 
     # Plot
-    plot_solution(graph, coord, shortest_path, plot_col)
+    plot_solution(graph, coord, shortest_path)
 
 solve_challenge(dl_new_data=False)
